@@ -1,5 +1,5 @@
 import statsmodels.api as sm
-from statsmodels.tsa import holtwinters
+from statsmodels.tsa import holtwinters, arima_model
 import matplotlib.pylab as plt
 import pandas as pd
 import numpy as np
@@ -88,9 +88,12 @@ def naive(ts):
     return [np.nan] + ts
 
 
-def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_slope=None, initial_seasons=None, trend=None, seasonal=None, seasonal_periods=None, optimized=False, debug=False, use_brute=False):
-    # Sanifica input
+def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_slope=None, initial_seasons=None, trend=None, seasonal=None, seasonal_periods=None, debug=False):
+    """Forecasting using exponential smoothing
 
+    Usage:
+        forecast(ts=ts)
+        """
     smoothing_level = None
     smoothing_slope = None
     smoothing_seasonal = None
@@ -143,6 +146,10 @@ def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_
     # print('FORECAST')
     # print(model.fittedfcast)
     return model.fittedfcast
+
+
+def arima(ts):
+    model = arima_model.ARIMA(ts, ())
 
 
 def mape(ts, forecast):
