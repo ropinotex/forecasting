@@ -88,32 +88,38 @@ def naive(ts):
     return [np.nan] + ts
 
 
-def forecast(ts, alpha=None, beta=None, gamma=None, trend=False, seasonal=False, seasonal_periods=None, optimized=False, debug=False):
+def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_slope=None, initial_seasons=None, trend=None, seasonal=None, seasonal_periods=None, optimized=False, debug=False, use_brute=False):
     # Sanifica input
 
     smoothing_level = None
     smoothing_slope = None
+    smoothing_seasonal = None
     try:
         if alpha and (0 <= alpha <= 1):
             smoothing_level = alpha
         if beta and (0 <= beta <= 1):
             smoothing_slope = beta
+            # if beta is set but trend is None, trend is set equal to add
+            if smoothing_slope and not trend:
+                trend = 'add'
+        if gamma and (0 <= gamma <= 1):
+            smoothing_seasonal = gamma
     except TypeError:
         print('ERRORE: alpha must be between 0 and 1')
         return np.nan
 
-    if trend:
-        trend = 'add'
-    else:
-        trend = None
+    # if trend:
+    #     trend = 'add'
+    # else:
+    #     trend = None
 
-    if seasonal:
-        seasonal = 'add'
-    else:
-        seasonal = None
+    # if seasonal:
+    #     seasonal = 'add'
+    # else:
+    #     seasonal = None
 
     if seasonal and not seasonal_periods:
-        print('ERRORE: con il modello stagionale occorre indicare il numero di stagioni')
+        print('ERROR: Please, provide the number of periods in a complete seasonal cycle')
         return np.nan
 
     model = holtwinters.ExponentialSmoothing(endog=pd.DataFrame(data=ts),
@@ -121,12 +127,18 @@ def forecast(ts, alpha=None, beta=None, gamma=None, trend=False, seasonal=False,
                                              seasonal=seasonal,
                                              seasonal_periods=seasonal_periods).fit(smoothing_level=smoothing_level,
                                                                                     smoothing_slope=smoothing_slope,
-                                                                                    optimized=optimized)
+                                                                                    smoothing_seasonal=smoothing_seasonal,
+                                                                                    initial_level=initial_level,
+                                                                                    initial_slope=initial_slope)
 
     model.predict(start=1, end=len(ts))
 
     if debug:
         print(model.model.params)
+    print('TS')
+    print(ts)
+    print('FORECAST')
+    print(model.fittedfcast)
     return model.fittedfcast
 
 
@@ -171,7 +183,7 @@ def me(ts, forecast):
         r = d - f
         if not math.isnan(r):
             err.append(r)
-
+    # print(err)
     return np.mean(err)
 
 
