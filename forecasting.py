@@ -6,10 +6,10 @@ import numpy as np
 import math
 
 
-def data(series=None):
+def data(series_id=None):
     """ Returns a time series from the archive
         Usage:
-            data(series=series_id)
+            data(series_id=series_id)
 
         Parameters:
             series_id (int): id of the time series
@@ -17,20 +17,27 @@ def data(series=None):
         Returns:
             list: time_series"""
 
-    if series == 1:
+    if not series_id:
+        print('Please, provide a series id')
+        return
+
+    if series_id == 1:
         dataset = sm.datasets.copper.load()
         return [each[0] for each in dataset.data]
-    elif series == 2:
+    elif series_id == 2:
         df = pd.read_csv('series2.csv')
         return [each[0] for each in df.values]
-    elif series == 3:
+    elif series_id == 3:
         df = pd.read_csv('series3.csv')
         return [each[0] for each in df.values]
-    elif series == 4:
+    elif series_id == 4:
         df = pd.read_csv('series4.csv')
         return [each[0] for each in df.values]
+    elif series_id == 5:
+        df = pd.read_csv('series5.csv')
+        return [each[0] for each in df.values]
     else:
-        print('Please, provide a series id')
+        print(f'ERROR: series_id {series_id} not found')
 
 
 def plot(**kwargs):
