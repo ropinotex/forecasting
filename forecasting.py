@@ -6,7 +6,17 @@ import numpy as np
 import math
 
 
-def data(series=1):
+def data(series=None):
+    """ Returns a time series from the archive
+        Usage:
+            data(series=series_id)
+
+        Parameters:
+            series_id (int): id of the time series
+
+        Returns:
+            list: time_series"""
+
     if series == 1:
         dataset = sm.datasets.copper.load()
         return [each[0] for each in dataset.data]
@@ -20,10 +30,26 @@ def data(series=1):
         df = pd.read_csv('series4.csv')
         return [each[0] for each in df.values]
     else:
-        raise Exception('Serie non riconosciuta')
+        print('Please, provide a series id')
 
 
-def chart(**kwargs):
+def plot(**kwargs):
+    """ Plots the given time series
+        Usage:
+            plot(ts_name=ts_values [, ts_name=ts_values...])
+
+        Parameters:
+            ts_name (str): Name of the time series (displaied in the legenda). One word, no whitespace
+            ts_values (list): Time series values (plotted)
+
+        Returns:
+            Plot of the time series
+
+        Example:
+            ts1 = data(1)
+            ts2 = data(2)
+            plot(name_of_ts1=ts1, name_of_ts2=ts2)"""
+
     plt.figure(figsize=(14, 8))
     for key, arg in kwargs.items():
         plt.plot(arg, label=key)
@@ -31,14 +57,35 @@ def chart(**kwargs):
     plt.show()
 
 
-def mm(data, num_periods=3):
-    """ Media mobile """
-    return [np.nan] + [each[0] for each in pd.DataFrame(data=data).rolling(num_periods).mean().values]
+def ma(ts, num_periods=3):
+    """ Return the moving average with a num_periods window
+
+        Usage:
+            ma(ts=time_series, num_periods=num_periods)
+
+        Parameters:
+            ts (list): A time series
+            num_periods (int): Length of the moving average window
+
+        Returns:
+            list: moving average
+        """
+    return [np.nan] + [each[0] for each in pd.DataFrame(data=ts).rolling(num_periods).mean().values]
 
 
-def naive(data):
-    """ Naive forecasting"""
-    return [np.nan] + data
+def naive(ts):
+    """ Naive forecasting
+
+        Usage:
+            naive(ts=time_series)
+
+        Parameters:
+            ts (list): A time series of the time series
+
+        Returns:
+            list: naive forecasti for the time series"""
+
+    return [np.nan] + ts
 
 
 def forecast(data, alpha=None, beta=None, gamma=None, trend=False, seasonal=False, seasonal_periods=None, optimized=False, debug=False):
