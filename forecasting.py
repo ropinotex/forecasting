@@ -88,7 +88,7 @@ def naive(ts):
     return [np.nan] + ts
 
 
-def forecast(data, alpha=None, beta=None, gamma=None, trend=False, seasonal=False, seasonal_periods=None, optimized=False, debug=False):
+def forecast(ts, alpha=None, beta=None, gamma=None, trend=False, seasonal=False, seasonal_periods=None, optimized=False, debug=False):
     # Sanifica input
 
     smoothing_level = None
@@ -99,7 +99,7 @@ def forecast(data, alpha=None, beta=None, gamma=None, trend=False, seasonal=Fals
         if beta and (0 <= beta <= 1):
             smoothing_slope = beta
     except TypeError:
-        print('ERRORE: Assicurarsi che i valori siano numerici e compresi tra 0 e 1')
+        print('ERRORE: alpha must be between 0 and 1')
         return np.nan
 
     if trend:
@@ -116,34 +116,58 @@ def forecast(data, alpha=None, beta=None, gamma=None, trend=False, seasonal=Fals
         print('ERRORE: con il modello stagionale occorre indicare il numero di stagioni')
         return np.nan
 
-    model = holtwinters.ExponentialSmoothing(endog=pd.DataFrame(data=data),
+    model = holtwinters.ExponentialSmoothing(endog=pd.DataFrame(data=ts),
                                              trend=trend,
                                              seasonal=seasonal,
                                              seasonal_periods=seasonal_periods).fit(smoothing_level=smoothing_level,
                                                                                     smoothing_slope=smoothing_slope,
                                                                                     optimized=optimized)
 
-    model.predict(start=1, end=len(data))
+    model.predict(start=1, end=len(ts))
 
     if debug:
         print(model.model.params)
     return model.fittedfcast
 
 
-def mape(data, forecast):
+def mape(ts, forecast):
+    """ Computes the Mean Average Percentage Error (MAPE)
+        Usage:
+            mape(ts=time_series, forecast=forecast)
+
+        Parameters:
+            ts (list): A time series
+            forecast (list): A forecast (computed with the forecast() function)
+
+        Returns:
+            list: MAPE
+    """
     err = []
-    for d, f in zip(data, forecast):
+    for d, f in zip(ts, forecast):
         r = d - f
         if not math.isnan(r):
             err.append(abs(r) / d)
         if d < 0:
-            print(d, f)
-    return np.mean(err)
+            # print(d, f)
+            pass
+    return np.mean(err) * 100
 
 
-def me(data, forecast):
+def me(ts, forecast):
+    """ Computes the Mean Error (ME)
+        Usage:
+            me(ts=time_series, forecast=forecast)
+
+        Parameters:
+            ts (list): A time series
+            forecast (list): A forecast (computed with the forecast() function)
+
+        Returns:
+            list: ME
+    """
+
     err = []
-    for d, f in zip(data, forecast):
+    for d, f in zip(ts, forecast):
         r = d - f
         if not math.isnan(r):
             err.append(r)
@@ -151,9 +175,21 @@ def me(data, forecast):
     return np.mean(err)
 
 
-def mse(data, forecast):
+def mse(ts, forecast):
+    """ Computes the Mean Squared Error (ME)
+        Usage:
+            mse(ts=time_series, forecast=forecast)
+
+        Parameters:
+            ts (list): A time series
+            forecast (list): A forecast (computed with the forecast() function)
+
+        Returns:
+            list: MSE
+    """
+
     err = []
-    for d, f in zip(data, forecast):
+    for d, f in zip(ts, forecast):
         r = d - f
         if not math.isnan(r):
             err.append(r ** 2)
@@ -161,9 +197,21 @@ def mse(data, forecast):
     return np.mean(err)
 
 
-def mae(data, forecast):
+def mae(ts, forecast):
+    """ Computes the Mean Absolute Error (MAE) (also know as Mean Absolute Deviation (MAD))
+        Usage:
+            mae(ts=time_series, forecast=forecast)
+
+        Parameters:
+            ts (list): A time series
+            forecast (list): A forecast (computed with the forecast() function)
+
+        Returns:
+            list: MAE (or MAD)
+    """
+
     err = []
-    for d, f in zip(data, forecast):
+    for d, f in zip(ts, forecast):
         r = d - f
         if not math.isnan(r):
             err.append(abs(r))
@@ -171,8 +219,23 @@ def mae(data, forecast):
     return np.mean(err)
 
 
-def kpi(data, forecast):
-    print('ME: ', me(data, forecast))
-    print('MAE: ', mae(data, forecast))
-    print('MAPE: ', mape(data, forecast))
-    print('MSE: ', mse(data, forecast))
+def kpi(ts, forecast, round_to=1):
+    """ Computes all the errors
+        Usage:
+            kpi(ts=time_series, forecast=forecast, round_to=round_to)
+
+        Parameters:
+            ts (list): A time series
+            forecast (list): A forecast (computed with the forecast() function)
+            round_to (int >= 0): Number of digits after comma
+
+        Returns:
+            Prints the errors on screen
+    """
+    if round_to < 0:
+        print('Please, provide a rounding value >= 0 (default is 1)')
+        return
+    print('ME: ', round(me(ts, forecast), round_to))
+    print('MAE: ', round(mae(ts, forecast), round_to))
+    print('MAPE: ', round(mape(ts, forecast), round_to), '%')
+    print('MSE: ', round(mse(ts, forecast), round_to))
