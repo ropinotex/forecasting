@@ -104,6 +104,9 @@ def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_
                 trend = 'add'
         if gamma and (0 <= gamma <= 1):
             smoothing_seasonal = gamma
+            if smoothing_seasonal and not seasonal:
+                seasonal = 'mul'
+
     except TypeError:
         print('ERRORE: alpha must be between 0 and 1')
         return np.nan
@@ -135,10 +138,10 @@ def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_
 
     if debug:
         print(model.model.params)
-    print('TS')
-    print(ts)
-    print('FORECAST')
-    print(model.fittedfcast)
+    # print('TS')
+    # print(ts)
+    # print('FORECAST')
+    # print(model.fittedfcast)
     return model.fittedfcast
 
 
