@@ -1,9 +1,12 @@
 import statsmodels.api as sm
-from statsmodels.tsa import holtwinters, arima_model
+from statsmodels.tsa import holtwinters
+from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.graphics.tsaplots import plot_acf
 import matplotlib.pylab as plt
 import pandas as pd
 import numpy as np
 import math
+import warnings
 
 
 def data(series_id=None):
@@ -61,6 +64,24 @@ def plot(**kwargs):
     for key, arg in kwargs.items():
         plt.plot(arg, label=key)
     plt.legend()
+    plt.show()
+
+
+def acf_plot(ts):
+    """ Plots the ACF
+
+        Usage:
+            acf_plot(ts=ts)
+
+        Parameters:
+            ts (list): A time series
+
+        Returns:
+            An ACF plot
+    """
+    if not isinstance(ts, pd.DataFrame):
+        ts = pd.DataFrame(data=ts)
+    plot_acf(ts)
     plt.show()
 
 
@@ -155,8 +176,79 @@ def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_
     return model.fittedfcast
 
 
-def arima(ts):
-    model = arima_model.ARIMA(ts, ())
+def fit_arima(ts, p_values=None, d_values=None, q_values=None):
+    """ Fits an ARIMA models using a grid search over p, q and d
+
+        Usage:
+            fit_arima(ts=ts, p_values=p_values, d_values=d_values, q_values=q_values)
+
+        Parameters:
+            ts (list): A time series
+            p_values (list of int): The number of lag observations included in the model, also called the lag order.
+            d_values (list of int): The number of times that the raw observations are differenced, also called the degree of differencing.
+            q_values (list of int): The size of the moving average window, also called the order of moving average.
+    """
+    if not p_values:
+        p_values = list(range(2))
+    if not d_values:
+        d_values = list(range(2))
+    if not q_values:
+        q_values = list(range(2))
+    return evaluate_models(ts, p_values, d_values, q_values)
+
+
+def arima(ts=None, p=None, d=None, q=None):
+    """ Forecasting using an ARIMA model of order=(p, d, q)"""
+
+    if not ts:
+        print('ERROR: please provide a time series')
+        return
+    if p is None or d is None or q is None:
+        print('ERROR: please provide the values for p, d and q')
+        return
+    model = ARIMA(ts, order=(p, d, q))
+    model_fit = model.fit(disp=0)
+    model_fit.predict(start=1, end=len(ts))
+
+    return model_fit.fittedvalues
+
+
+# evaluate an ARIMA model for a given order (p,d,q)
+def evaluate_arima_model(X, arima_order):
+    # prepare training dataset
+    train_size = int(len(X) * 0.66)
+    train, test = X[0:train_size], X[train_size:]
+    history = [x for x in train]
+    # make predictions
+    predictions = list()
+    for t in range(len(test)):
+        model = ARIMA(history, order=arima_order)
+        model_fit = model.fit(disp=0)
+        yhat = model_fit.forecast()[0]
+        predictions.append(yhat)
+        history.append(test[t])
+    # calculate out of sample error
+    error = mse(test, predictions)
+    return error
+
+
+def evaluate_models(dataset, p_values, d_values, q_values):
+    """ Evaluates combinations of p, d and q values for an ARIMA model"""
+
+    warnings.filterwarnings("ignore")
+    best_score, best_cfg = float("inf"), None
+    for p in p_values:
+        for d in d_values:
+            for q in q_values:
+                order = (p, d, q)
+                try:
+                    mse = evaluate_arima_model(dataset, order)
+                    if mse < best_score:
+                        best_score, best_cfg = mse, order
+                    print('ARIMA%s MSE=%.3f' % (order, mse))
+                except:
+                    continue
+    print('Best ARIMA%s MSE=%.3f' % (best_cfg, best_score))
 
 
 def mape(ts, forecast):
