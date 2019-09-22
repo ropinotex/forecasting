@@ -4,11 +4,15 @@ from statsmodels.tsa.arima_model import ARIMA
 from statsmodels.graphics.tsaplots import plot_acf
 from statsmodels.tsa.tsatools import detrend as ts_detrend
 from statsmodels.tsa.seasonal import seasonal_decompose
+from fbprophet import Prophet
 import matplotlib.pylab as plt
 import pandas as pd
 import numpy as np
 import math
 import warnings
+
+print('WARNING: This software is designed and provided for educational purpose only')
+print('You may refer to https://otexts.com/fpp2/ for theory')
 
 
 def data(series_id=None):
@@ -174,7 +178,12 @@ def naive(ts):
     return [np.nan] + ts
 
 
-def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_slope=None, initial_seasons=None, trend=None, seasonal=None, seasonal_periods=None, debug=False):
+def seasonal_naive(ts, seasonal_periods):
+    """ Seasonal naive forecasting: each forecast is equal to the last observed value from the same season of the year (e.g., the same month of the previous year)"""
+    print('NOT IMPLEMENTED YET')
+
+
+def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_slope=None, initial_seasons=None, trend=None, seasonal=None, seasonal_periods=None, debug=False, use_boxcox=False):
     """Forecasting using exponential smoothing
 
     Usage:
@@ -221,7 +230,8 @@ def forecast(ts, alpha=None, beta=None, gamma=None, initial_level=None, initial_
                                                                                     smoothing_slope=smoothing_slope,
                                                                                     smoothing_seasonal=smoothing_seasonal,
                                                                                     initial_level=initial_level,
-                                                                                    initial_slope=initial_slope)
+                                                                                    initial_slope=initial_slope,
+                                                                                    use_boxcox=use_boxcox)
 
     model.predict(start=1, end=len(ts))
 
@@ -418,3 +428,25 @@ def kpi(ts, forecast, round_to=1):
     print('MAE: ', round(mae(ts, forecast), round_to))
     print('MAPE: ', round(mape(ts, forecast), round_to), '%')
     print('MSE: ', round(mse(ts, forecast), round_to))
+
+
+def fb_forecast(ts, periods=1):
+
+    warnings.filterwarnings("ignore")
+    # Add timeindex to ts
+    # Assume daily observations
+    date_rng = pd.date_range(start='1/1/2018', periods=len(ts), freq='D')
+    values = []
+    for d, v in zip(date_rng, ts):
+        values.append([d.date(), v])
+
+    # Create the dataframe
+    df = pd.DataFrame(data=values, columns=['ds', 'y'])
+
+    m = Prophet()
+    m.fit(df)
+    future = m.make_future_dataframe(periods=periods)
+    forecast = m.predict(future)
+
+    # return only the values
+    return forecast['yhat'].values
