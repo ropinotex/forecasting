@@ -1,3 +1,12 @@
+# ==============================================================================
+# description     :Forecasting toolbox for teaching and educational purposes
+# author          :Roberto Pinto
+# date            :2019.09.22
+# version         :1.0
+# notes           :This software is meant for teaching purpose only and it is provided as-is
+# python_version  :3.7
+# ==============================================================================
+
 import statsmodels.api as sm
 from statsmodels.tsa import holtwinters
 from statsmodels.tsa.arima_model import ARIMA
@@ -10,6 +19,14 @@ import pandas as pd
 import numpy as np
 import math
 import warnings
+
+__author__ = "Roberto Pinto"
+__copyright__ = "Copyright 2019"
+__license__ = "MIT"
+__version__ = "1.0"
+__maintainer__ = "Roberto Pinto"
+__email__ = "roberto.pinto@unibg.it"
+__status__ = "Use for teaching only"
 
 print('WARNING: This software is designed and provided for educational purpose only')
 print('You may refer to https://otexts.com/fpp2/ for theory')
