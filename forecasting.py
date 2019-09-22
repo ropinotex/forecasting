@@ -430,12 +430,41 @@ def kpi(ts, forecast, round_to=1):
     print('MSE: ', round(mse(ts, forecast), round_to))
 
 
-def fb_forecast(ts, periods=1):
+def fb_forecast(ts, periods=1, observation_type='month', seasonality_mode='add'):
+    """ Forecasting using Facebook's Prophet
 
+        Usage:
+            fb_forecast(ts=ts, periods=periods, observation_type=observation_type, seasonality_mode=seasonality_mode)
+
+        Parameters:
+            ts (list): A time series
+            periods (int > 0): Number of ahead forecast periods
+            observation_type (str): 'month' for monthly observations, 'day' for daily observations
+            seasonality_mode (str): 'add' for additive, 'mul' for multiplicative
+
+        Returns:
+            list: Forecasts
+    """
     warnings.filterwarnings("ignore")
     # Add timeindex to ts
     # Assume daily observations
-    date_rng = pd.date_range(start='1/1/2018', periods=len(ts), freq='D')
+
+    if observation_type == 'month':
+        date_rng = pd.date_range(start='1/1/2018', periods=len(ts), freq='M')
+    elif observation_type == 'day':
+        date_rng = pd.date_range(start='1/1/2018', periods=len(ts), freq='D')
+    else:
+        print(f'ERROR: observation_type {observation_type} not available')
+        return
+
+    if seasonality_mode == 'add':
+        seasonality_mode = 'additive'
+    elif seasonality_mode == 'mul':
+        seasonality_mode = 'multiplicative'
+    else:
+        print(f'ERROR: seasonality_mode {seasonality_mode} not available')
+        return
+
     values = []
     for d, v in zip(date_rng, ts):
         values.append([d.date(), v])
@@ -443,7 +472,10 @@ def fb_forecast(ts, periods=1):
     # Create the dataframe
     df = pd.DataFrame(data=values, columns=['ds', 'y'])
 
-    m = Prophet()
+    m = Prophet(yearly_seasonality='auto',
+                weekly_seasonality='auto',
+                daily_seasonality='auto',
+                seasonality_mode=seasonality_mode)
     m.fit(df)
     future = m.make_future_dataframe(periods=periods)
     forecast = m.predict(future)
