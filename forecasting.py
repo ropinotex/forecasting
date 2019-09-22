@@ -2,6 +2,8 @@ import statsmodels.api as sm
 from statsmodels.tsa import holtwinters
 from statsmodels.tsa.arima_model import ARIMA
 from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.tsa.tsatools import detrend as ts_detrend
+from statsmodels.tsa.seasonal import seasonal_decompose
 import matplotlib.pylab as plt
 import pandas as pd
 import numpy as np
@@ -83,6 +85,62 @@ def acf_plot(ts):
         ts = pd.DataFrame(data=ts)
     plot_acf(ts)
     plt.show()
+
+
+def detrend(ts):
+    """ Detrend a time series
+
+        Usage:
+            detrend(ts=ts)
+
+        Parameters:
+            ts (list): A time series
+
+        Returns:
+            list: The detrended time series
+        """
+    det = ts_detrend(np.array(ts), order=1)
+    return det.tolist()
+
+
+def decompose(ts, model='add', seasonal_periods=12):
+    """ Decompose a time series accordinf to an additive (model = 'add') or multiplicative (model = 'mul') model
+
+        Usage:
+            decompose(ts=ts, model=model)
+
+        Parameters:
+            ts (list): A time series
+            model (str): 'add' for an additive model decomposition, 'mul' for a multiplicative model
+            seasonal_periods (int): Periods in a season
+
+        Returns:
+            Plot the decomposes time series
+    """
+    if model == 'add':
+        model = 'additive'
+    elif model == 'mul':
+        model = 'multiplicative'
+    else:
+        print(f'ERROR: decompostion model {model} not available')
+        return
+    return seasonal_decompose(ts, model=model, freq=seasonal_periods).plot()
+
+
+def mean(ts):
+    """ Calculate tne mean value of the time series and uses it as a forecast
+
+        Usage:
+            mean(ts=ts)
+
+        Parameters:
+            ts (list): A time series
+
+        Returns:
+            list: forecast as mean value
+    """
+    mv = np.mean(ts)
+    return [mv for _ in range(len(ts))]
 
 
 def ma(ts, num_periods=3):
