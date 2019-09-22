@@ -25,7 +25,7 @@ def data(series_id=None):
 
         Returns:
             list: time_series"""
-
+    warnings.filterwarnings("ignore")
     if not series_id:
         print('Please, provide a series id')
         return
